@@ -1,0 +1,75 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
+void sign_up(std::ofstream& file, const std::string& login, const std::string& password) {
+    file << login << " : " << password << "\n";
+}
+
+std::string sign_in(std::ifstream& file, const std::string& login, const std::string& password) {
+    std::stringstream fileContents;
+    fileContents << file.rdbuf();
+    std::string fileContent = fileContents.str();
+    
+    if (fileContent.find(login + " : " + password) != std::string::npos) {
+        return "Welcome!!!";
+    }
+    
+    file.clear();
+    file.seekg(0);
+    
+    if (fileContent.find(login) == std::string::npos) {
+        return "User not found";
+    }
+    else if (fileContent.find(password) == std::string::npos) {
+        return "Password is wrong";
+    }
+    
+    return "";
+}
+
+std::string sha256(const std::string& str) {
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str.c_str(), str.length());
+    SHA256_Final(hash, &sha256);
+    
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
+    }
+    
+    return ss.str();
+}
+
+int main() {
+    int a;
+    std::string login, password;
+    
+    std::cout << "Enter 1 to sign up, 2 to sign in: ";
+    std::cin >> a;
+    
+    std::cout << "Enter login: ";
+    std::cin >> login;
+    
+    std::ofstream file_a("C:\\Users\\Admin\\Desktop\\LogandPass.txt", std::ios::app);
+    std::ifstream file_r("C:\\Users\\Admin\\Desktop\\LogandPass.txt");
+    
+    std::cout << "Enter password: ";
+    std::cin >> password;
+    password = sha256(password);
+    
+    if (a == 1) {
+        sign_up(file_a, login, password);
+    }
+    else if (a == 2) {
+        std::cout << sign_in(file_r, login, password) << std::endl;
+    }
+    
+    file_a.close();
+    file_r.close();
+    
+    return 0;
+}
